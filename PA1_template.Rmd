@@ -7,19 +7,35 @@ output:
 
 
 ## Loading and preprocessing the data
-
-
-
+download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip", destfile = "activity.zip", mode="wb")
+unzip("activity.zip")
+stepdata <- read.csv("activity.csv", header = TRUE)
+head(stepdata)
 ## What is mean total number of steps taken per day?
-
-
-
+library(magrittr)
+library(dplyr)
+databydate <- stepdata %>% select(date, steps) %>% group_by(date) %>% summarize(tsteps= sum(steps)) %>%na.omit()
+hist(databydate$tsteps, xlab = "Total Steps",main="Histogram Total Steps each day", breaks =15 )
 ## What is the average daily activity pattern?
-
-
-
+mean(databydate$tsteps)
+median(databydate$tsteps)
 ## Imputing missing values
-
-
-
+mVals <- sum(is.na(data))
+mVals
 ## Are there differences in activity patterns between weekdays and weekends?
+meandata$date <- as.Date(meandata$date)
+meandata$day <- weekdays(meandata$date)
+meandata$end <- ifelse(meandata$day=="Saturday" | meandata$day=="Sunday", "Weekend", "Weekday" )
+library(ggplot2)
+meandataendday <- aggregate(meandata$steps , by= list(meandata$end, meandata$interval), na.omit(mean))
+names(meandataendday) <- c("weekend", "interval", "steps")
+ggplot(meandataendday, aes(x=interval, y=steps, color=weekend)) + geom_line()+
+facet_grid(weekend ~.) + xlab("Interval") + ylab("Mean avg of Steps") +
+    ggtitle("Final Comparison")
+    
+## Making a Histogram of the data
+FullSummedDataByDay <- aggregate(meandata$steps, by=list(meandata$date), sum)
+names(FullSummedDataByDay)[1] ="date"
+names(FullSummedDataByDay)[2] ="totalsteps"
+head(FullSummedDataByDay,15)
+hist(FullSummedDataByDay$totalsteps, xlab = "Steps", ylab = "Frequency", main = "Total Daily Steps", breaks = 20)
